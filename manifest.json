@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.jburchel.meeting-mode",
+  "name": "Meeting Mode",
+  "version": "1.0.0",
+  "author": "Jim Burchel",
+  "license": "MIT",
+  "description": "Join any call and your desktop goes quiet by itself: Do Not Disturb, no idle lock, night light off, voice assistants muted. Hang up and it all comes back. Works with Meet, Zoom, Teams, Slack and Discord, in the browser or the app.",
+  "kinds": [
+    "service",
+    "overlay",
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "service": "Service.qml",
+    "overlay": "Settings.qml",
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Meeting Mode",
+    "description": "Lights up while you're in a call. Click to turn meeting mode on or off, right-click for settings.",
+    "category": "Productivity",
+    "allowMultiple": false,
+    "defaultSection": "center"
+  },
+  "icon": "assets/icon.svg",
+  "preview": "preview.png"
+}

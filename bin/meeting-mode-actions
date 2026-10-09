@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# Meeting Mode: apply and undo the desktop changes for a call.
+#
+#   meeting-mode-actions on <action,...>   apply the listed actions
+#   meeting-mode-actions off               undo exactly what "on" changed
+#   meeting-mode-actions status            print {"active":…,"changed":[…]}
+#
+# Actions: dnd, awake, nightlight, jarvis. Each one is recorded only if it
+# actually changed something, so "off" never turns off a setting that was
+# already the way a meeting wants it (for example Stay Awake you switched on
+# yourself). The record survives a shell restart mid-call.
+#
+# Called by Service.qml. Safe to run by hand.
+
+set -u
+
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/meeting-mode"
+changed="$state_dir/changed"   # one line per change: dnd | awake | nightlight <temp> | jarvis-mute | jarvis-listen
+active="$state_dir/active"
+
+OFF_TEMP=6500                  # omarchy-toggle-nightlight's "off" temperature
+AWAKE_FLAG="$HOME/.local/state/omarchy/indicators/stay-awake"
+
+mkdir -p "$state_dir"
+
+have() { command -v "$1" >/dev/null 2>&1; }
+record() { echo "$*" >>"$changed"; }
+
+dnd_on() { [[ "$(omarchy-shell notifications dndState 2>/dev/null)" == on ]]; }
+
+night_status() { omarchy toggle nightlight --status 2>/dev/null; }
+
+turn_on() {
+  [[ -e "$active" ]] && return 0
+  : >"$changed"
+  local actions=",${1:-},"
+
+  if [[ $actions == *,dnd,* ]] && ! dnd_on; then
+    omarchy toggle notification silencing >/dev/null 2>&1 && record dnd
+  fi
+
+  if [[ $actions == *,awake,* && ! -f "$AWAKE_FLAG" ]]; then
+    omarchy toggle idle stay-awake >/dev/null 2>&1 && record awake
+  fi
+
+  if [[ $actions == *,nightlight,* ]] && night_status | jq -e .enabled >/dev/null 2>&1; then
+    local temp
+    temp=$(night_status | jq -r '.temperature // empty')
+    hyprctl hyprsunset temperature "$OFF_TEMP" >/dev/null 2>&1 && record nightlight "${temp:-4000}"
+    omarchy-shell -q nightlight refresh >/dev/null 2>&1
+  fi
+
+  # Jarvis voice assistant (github.com/jburchel/omarchy-jarvis), when installed:
+  # stop it talking over the call and stop the wake word hearing the meeting.
+  if [[ $actions == *,jarvis,* ]] && have jarvis; then
+    if [[ ! -f "$HOME/.config/jarvis/muted" ]]; then
+      jarvis hush >/dev/null 2>&1
+      jarvis mute >/dev/null 2>&1 && record jarvis-mute
+    fi
+    if [[ "$(jarvis listen status 2>/dev/null | head -1)" == active ]]; then
+      jarvis listen stop >/dev/null 2>&1 && record jarvis-listen
+    fi
+  fi
+
+  touch "$active"
+}
+
+turn_off() {
+  [[ -e "$active" ]] || return 0
+  local what arg
+  while read -r what arg; do
+    case "$what" in
+      dnd)           dnd_on && omarchy toggle notification silencing >/dev/null 2>&1 ;;
+      awake)         omarchy toggle idle allow-idle >/dev/null 2>&1 ;;
+      nightlight)    hyprctl hyprsunset temperature "${arg:-4000}" >/dev/null 2>&1
+                     omarchy-shell -q nightlight refresh >/dev/null 2>&1 ;;
+      jarvis-mute)   jarvis unmute >/dev/null 2>&1 ;;
+      jarvis-listen) jarvis listen start >/dev/null 2>&1 ;;
+    esac
+  done <"$changed"
+  rm -f "$active" "$changed"
+}
+
+status() {
+  local list="[]"
+  [[ -s "$changed" ]] && list=$(cut -d' ' -f1 "$changed" | jq -R . | jq -sc .)
+  jq -cn --argjson a "$([[ -e "$active" ]] && echo true || echo false)" --argjson c "$list" '{active: $a, changed: $c}'
+}
+
+case "${1:-status}" in
+  on)     turn_on "${2:-}"; status ;;
+  off)    turn_off; status ;;
+  status) status ;;
+  *) echo "usage: meeting-mode-actions on <dnd,awake,nightlight,jarvis> | off | status" >&2; exit 2 ;;
+esac
