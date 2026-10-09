@@ -11,7 +11,8 @@ import "SettingsModel.js" as SettingsModel
 //
 // The desktop changes themselves live in bin/meeting-mode-actions, which
 // records what it changed so only those are undone, even across a shell
-// restart. State for the bar widget goes to $XDG_RUNTIME_DIR/meeting-mode.json.
+// restart. State for the bar widget goes to $XDG_RUNTIME_DIR/meeting-mode.json, or,
+// without a runtime dir, to the plugin's private (0700) state directory; never /tmp.
 //
 // IPC: omarchy-shell meeting-mode toggle | on | off | auto | status | settings
 Item {
@@ -29,7 +30,7 @@ Item {
     readonly property var settings: store.values
 
     readonly property string helper: decodeURIComponent(Qt.resolvedUrl("bin/meeting-mode-actions").toString().replace(/^file:\/\//, ""))
-    readonly property string stateFile: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/meeting-mode.json"
+    readonly property string stateFile: SettingsModel.statePath(Quickshell.env("XDG_RUNTIME_DIR"), Quickshell.env("XDG_STATE_HOME"), Quickshell.env("HOME"))
 
     // --- call detection -----------------------------------------------------
     readonly property var nodes: Pipewire.nodes ? Pipewire.nodes.values : []
@@ -235,8 +236,13 @@ Item {
         };
     }
 
+    // Nothing is written until the helper has run once: it creates the private
+    // (0700) state directory used when there is no XDG_RUNTIME_DIR.
+    property bool stateReady: false
+
     function writeState() {
-        stateOut.setText(JSON.stringify(root.stateObject()) + "\n");
+        if (root.stateReady)
+            stateOut.setText(JSON.stringify(root.stateObject()) + "\n");
     }
 
     FileView {
@@ -250,6 +256,7 @@ Item {
         // Pick up a meeting left active by a shell restart; the end timer
         // undoes it if the call is already over.
         root.runHelper(["status"], function(status) {
+            root.stateReady = true;
             if (status.active) {
                 root.active = true;
                 root.reason = "restored";

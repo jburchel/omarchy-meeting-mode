@@ -82,5 +82,10 @@ rm "$tmp/bin/jarvis"
 check "no jarvis" "$("$A" on jarvis,dnd)" '{"active":true,"changed":["dnd"]}'
 "$A" off >/dev/null
 
+# 6. The state directory is private, even if it already existed with looser permissions.
+chmod 755 "$XDG_STATE_HOME/meeting-mode"
+"$A" status >/dev/null
+check "state dir is 0700" "$(stat -c %a "$XDG_STATE_HOME/meeting-mode")" "700"
+
 echo "actions: $pass passed, $fail failed"
 [[ $fail -eq 0 ]]

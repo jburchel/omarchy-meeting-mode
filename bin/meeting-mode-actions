@@ -21,7 +21,10 @@ active="$state_dir/active"
 OFF_TEMP=6500                  # omarchy-toggle-nightlight's "off" temperature
 AWAKE_FLAG="$HOME/.local/state/omarchy/indicators/stay-awake"
 
-mkdir -p "$state_dir"
+# Private: the records here (and the service's state.json when there is no
+# XDG_RUNTIME_DIR) say when you are in a call and with which app.
+mkdir -p -m 700 "$state_dir"
+chmod 700 "$state_dir"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 record() { echo "$*" >>"$changed"; }

@@ -86,7 +86,7 @@ Item {
 
     FileView {
         id: stateIn
-        path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/meeting-mode.json"
+        path: SettingsModel.statePath(Quickshell.env("XDG_RUNTIME_DIR"), Quickshell.env("XDG_STATE_HOME"), Quickshell.env("HOME"))
         watchChanges: true
         printErrors: false
         onFileChanged: reload()

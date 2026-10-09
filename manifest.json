@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.jburchel.meeting-mode",
   "name": "Meeting Mode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Jim Burchel",
   "license": "MIT",
   "description": "Join any call and your desktop goes quiet by itself: Do Not Disturb, no idle lock, night light off, voice assistants muted. Hang up and it all comes back. Works with Meet, Zoom, Teams, Slack and Discord, in the browser or the app.",

@@ -107,7 +107,11 @@ reads which apps are recording.
 The desktop changes are made by `bin/meeting-mode-actions`, a small shell script you can read
 in a minute. It uses Omarchy's own commands (`omarchy toggle notification silencing`,
 `omarchy toggle idle`, `hyprctl hyprsunset`) and records each change in
-`~/.local/state/meeting-mode/` so it can undo exactly those.
+`~/.local/state/meeting-mode/` (created readable only by you) so it can undo exactly those.
+
+The call status shown in the bar (whether you are in a call, with which app, since when) lives in
+`$XDG_RUNTIME_DIR`, which only you can read; without one it stays in that private state
+directory. It is never written to `/tmp`.
 
 Recording apps that aren't call apps (OBS, Audacity, dictation tools, the Jarvis wake word)
 never start meeting mode.

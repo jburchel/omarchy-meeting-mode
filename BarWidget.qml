@@ -3,10 +3,11 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons // qmllint disable import
 import qs.Ui // qmllint disable import
+import "SettingsModel.js" as SettingsModel
 
 // Meeting Mode bar indicator. The service does the work (one instance, so
 // actions never run twice with several monitors); this only shows its state,
-// read from $XDG_RUNTIME_DIR/meeting-mode.json, and sends commands over IPC.
+// read from the path SettingsModel.statePath() gives, and sends commands over IPC.
 //
 //   left click    turn meeting mode on / off now
 //   right click   settings
@@ -57,7 +58,7 @@ BarWidget {
 
     FileView {
         id: stateIn
-        path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/meeting-mode.json"
+        path: SettingsModel.statePath(Quickshell.env("XDG_RUNTIME_DIR"), Quickshell.env("XDG_STATE_HOME"), Quickshell.env("HOME"))
         watchChanges: true
         printErrors: false
         onFileChanged: reload()

@@ -79,6 +79,18 @@ function callAppName(props) {
     return name !== "" ? name : "a call app";
 }
 
+// Where the service publishes its state for the bar widget and settings
+// panel. It says whether you are in a call and with which app, so it must
+// never land somewhere other users can read: $XDG_RUNTIME_DIR is private to
+// the user (0700 by spec); without it, use this plugin's state directory,
+// which bin/meeting-mode-actions creates 0700. Never /tmp.
+function statePath(runtimeDir, stateHome, home) {
+    if (runtimeDir)
+        return runtimeDir + "/meeting-mode.json";
+    var base = stateHome || ((home || "") + "/.local/state");
+    return base + "/meeting-mode/state.json";
+}
+
 function entryFromConfig(config, pluginId) {
     var plugins = config && Array.isArray(config.plugins) ? config.plugins : [];
     for (var i = 0; i < plugins.length; i++)
@@ -95,5 +107,6 @@ if (typeof module !== "undefined")
         actionList: actionList,
         isCallStream: isCallStream,
         callAppName: callAppName,
+        statePath: statePath,
         entryFromConfig: entryFromConfig
     };

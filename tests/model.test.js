@@ -69,4 +69,12 @@ test("app name for messages", () => {
   assert.strictEqual(M.callAppName({}), "a call app");
 });
 
+test("state file is never world-readable /tmp", () => {
+  assert.strictEqual(M.statePath("/run/user/1000", "", "/home/u"), "/run/user/1000/meeting-mode.json");
+  assert.strictEqual(M.statePath("", "", "/home/u"), "/home/u/.local/state/meeting-mode/state.json");
+  assert.strictEqual(M.statePath(undefined, "/home/u/.state", "/home/u"), "/home/u/.state/meeting-mode/state.json");
+  for (const p of [M.statePath("", "", "/home/u"), M.statePath(null, null, "/home/u")])
+    assert.ok(!p.startsWith("/tmp"), p);
+});
+
 console.log(`model: ${n} tests passed`);
