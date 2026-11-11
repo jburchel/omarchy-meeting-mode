@@ -29,7 +29,7 @@ chmod 700 "$state_dir"
 have() { command -v "$1" >/dev/null 2>&1; }
 record() { echo "$*" >>"$changed"; }
 
-dnd_on() { [[ "$(omarchy-shell notifications dndState 2>/dev/null)" == on ]]; }
+dnd_on() { [[ "$(omarchy-shell notifications isDnd 2>/dev/null)" == on ]]; }
 
 night_status() { omarchy toggle nightlight --status 2>/dev/null; }
 
