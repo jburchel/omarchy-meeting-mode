@@ -12,10 +12,12 @@ pass=0 fail=0
 check() { if [[ "$2" == "$3" ]]; then pass=$((pass+1)); else fail=$((fail+1)); echo "FAIL: $1: expected '$3', got '$2'"; fi; }
 
 # Stand-ins keep their state as files in $FAKE.
+# Answers like Omarchy 4.5's IPC: isDnd exists, an unknown function fails.
 cat >"$tmp/bin/omarchy-shell" <<'S'
 #!/usr/bin/env bash
-[[ "$1 $2" == "notifications dndState" ]] && { cat "$FAKE/dnd" 2>/dev/null || echo off; }
-exit 0
+[[ "$1" == -q ]] && exit 0
+[[ "$1 $2" == "notifications isDnd" ]] && { cat "$FAKE/dnd" 2>/dev/null || echo off; exit 0; }
+echo "Function not found."; exit 1
 S
 cat >"$tmp/bin/omarchy" <<'S'
 #!/usr/bin/env bash

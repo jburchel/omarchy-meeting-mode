@@ -106,7 +106,8 @@ reads which apps are recording.
 
 The desktop changes are made by `bin/meeting-mode-actions`, a small shell script you can read
 in a minute. It uses Omarchy's own commands (`omarchy toggle notification silencing`,
-`omarchy toggle idle`, `hyprctl hyprsunset`) and records each change in
+`omarchy toggle idle`, `hyprctl hyprsunset`; Do Not Disturb is read with
+`omarchy-shell notifications isDnd`, the name Omarchy 4.5 kept) and records each change in
 `~/.local/state/meeting-mode/` (created readable only by you) so it can undo exactly those.
 
 The call status shown in the bar (whether you are in a call, with which app, since when) lives in
